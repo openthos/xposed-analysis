@@ -132,14 +132,14 @@ repo sync --force-sync
 [General]
 outdir = /home/quillon/workspace/xposedou
 [Build]
-\# Please keep the base version number and add your custom suffix
+# Please keep the base version number and add your custom suffix
 version = 65 (test)
-\# makeflags = -j4
-\# Root directories of the AOSP source tree per SDK version
+# makeflags = -j4
+# Root directories of the AOSP source tree per SDK version
 [AospDir]
 22 = /home/quillon/workspace/git/androidx86-5.1.1
-\# SDKs to be used for compiling BusyBox
-\# Needs https://github.com/rovo89/android_external_busybox
+# SDKs to be used for compiling BusyBox
+# Needs https://github.com/rovo89/android_external_busybox
 [BusyBox]
 ```
 
