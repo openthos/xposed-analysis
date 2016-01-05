@@ -4,9 +4,9 @@
 
 # 2. 下载
 
-官网下载地址：http://developer.android.com/sdk/index.html。但是这个地址目前无法下载（虽然已经改了hosts，可以上谷歌等）  
+官网下载地址：[http://developer.android.com/sdk/index.html](http://developer.android.com/sdk/index.html)。但是这个地址目前无法下载（虽然已经改了hosts，可以上谷歌等）  
 
-其他下载地址：http://www.androiddevtools.cn/。我就是从这个地方下载的。而且这里提供了一些国内的镜像地址。  
+其『他下载地址：[http://www.androiddevtools.cn/](http://www.androiddevtools.cn/)。我就是从这个地方下载的。而且这里提供了一些国内的镜像地址。  
 
 ## 2.1 windows版下载
 
@@ -41,13 +41,13 @@ windows版和linux版的配置过程相同，就统一描述了。
 在studio的欢迎界面，依次选择『SDK Manager』、『Appearance & Behavior』、『System Settings』、『HTTP Proxy』（中间若有卡顿，请耐心等待）。  
 
 在右侧的操作界面依次选择『Manual proxy configuration』、『HTTP』。  
-（我这里用的是http://www.androiddevtools.cn/中提供的中科院的镜像，当然也可以尝试使用其他的。）  
+（我这里用的是[http://www.androiddevtools.cn/](http://www.androiddevtools.cn/)中提供的中科院的镜像，当然也可以尝试使用其他的。）  
 在『Host Name』中输入mirrors.opencas.cn；『Port number』中输入80。  
 点击『Apply』按钮，应用修改。  
 
 在左侧的树状列表中选择『Android SDK』，在右侧选择『SDK Update Sites』选项页。  
 选中下部的『Force https://...sources to be fetched using http://...』  
-点击右边的『+』，在弹出的对话框的『Name』中输入任意的名字，在『URL』中输入http://mirrors.opencas.cn。点击『OK』按钮返回。  
+点击右边的『+』，在弹出的对话框的『Name』中输入任意的名字，在『URL』中输入[http://mirrors.opencas.cn](http://mirrors.opencas.cn)。点击『OK』按钮返回。  
 列表中就会出现刚添加的信息。点击『Apply』按钮，应用修改。稍等片刻，就会出来一些可用的网址。  
 我这的现实情况是出来的可用网址都是google的http协议的，所以怀疑不需要添加网址，只要勾选『Force https://...sources to be fetched using http://...』并应用应该就可以了。  
 
