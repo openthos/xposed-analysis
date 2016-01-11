@@ -178,8 +178,230 @@ WARNING: linker: [vdso]: unused DT entry: type 0x6ffffef5 arg 0xec
 
 估计是aosp和androidx86两个版本的源码还是有一定的差距，aosp版本编译出来的xposed并不能在androidx86版本的系统上运行。  
 
+# 5. 成功的运行Xposed
+
+目前仅在下面说的版本中运行成功，其他的还没验证，不保证没问题。  
+
+# 5.1 android-arm-5.1.1
+
+利用前面介绍的编译方法，编译出一个基于aosp的arm版本的安卓系统。  
+
+# 5.2 Xposed相关资源
+
+这里没有进行编译，先直接使用xda论坛下载的资源做的实验（估计按前面的办法编译出来的应该一样）。另外，网上下载了一个Flat Style Colored Bars的Xposed模块，用来验证Xposed的有效性。  
+
+# 5.3 emulator
+
+如何安装android studio、sdk、ndk、创建avd、使用emulator等，以及配置相关的环境变量，这里就不详细描述了。请参考相应的资料。  
+
+# 5.4 过程
+
+假设xposed框架所在目录为/xposed/xposed-v79-sdk22-arm/（网上下载的zip包解压所得）。  
+假设编译android-arm-5.1.1产生的system.img、userdata.img、ramdisk.img复制到了/tmp/xposedtest/android-arm32/目录。  
+
+- 启动模拟器的方法
+
+```
+cd /tmp/xposedtest/android-arm32/
+emulator -avd arm32 -system system.img -data userdata.img -ramdisk ramdisk.img
+```
+
+其中的arm32是我之前创建的avd。  
+
+- root
+
+按照[手动root emulator](http://blog.csdn.net/feifei454498130/article/details/6537274)中的方法，对emulator的系统进行root。
+
+- 安装XposedInstaller
+
+启动虚拟机，在另外一个shell里面执行：  
+
+```
+adb install [xposedinstaller].apk
+```
+
+- 安装Xposed框架
+
+关闭emulator。  
+
+ - 修改Xposed框架的安装脚本
+ 
+```
+cd /xposed/xposed-v79-sdk22-arm/
+cp ./META-INF/com/google/android/flash_script.sh .
+chmod 777 flash_script.sh
+gedit flash_script.sh
+```
+修改这个文件，把其中的一些什么版本判断之类的语句删除，只保留文件拷贝，文件属性设置等相关的内容，供后面手动安装xposed框架使用。修改后的文件大致如下：  
+
+```
+grep_prop() {
+  REGEX="s/^$1=//p"
+  shift
+  FILES=$@
+  if [ -z "$FILES" ]; then
+    FILES='/system/build.prop'
+  fi
+  cat $FILES 2>/dev/null | sed -n $REGEX | head -n 1
+}
+
+android_version() {
+  case $1 in
+    15) echo '4.0 / SDK'$1;;
+    16) echo '4.1 / SDK'$1;;
+    17) echo '4.2 / SDK'$1;;
+    18) echo '4.3 / SDK'$1;;
+    19) echo '4.4 / SDK'$1;;
+    21) echo '5.0 / SDK'$1;;
+    22) echo '5.1 / SDK'$1;;
+    23) echo '6.0 / SDK'$1;;
+    *)  echo 'SDK'$1;;
+  esac
+}
+
+cp_perm() {
+  cp -f $1 $2 || exit 1
+  set_perm $2 $3 $4 $5 $6
+}
+
+set_perm() {
+  chown $2:$3 $1 || exit 1
+  chmod $4 $1 || exit 1
+  if [ "$5" ]; then
+    chcon $5 $1 2>/dev/null
+  else
+    chcon 'u:object_r:system_file:s0' $1 2>/dev/null
+  fi
+}
+
+install_nobackup() {
+  cp_perm ./$1 $1 $2 $3 $4 $5
+}
+
+install_and_link() {
+  TARGET=$1
+  XPOSED="${1}_xposed"
+  BACKUP="${1}_original"
+  if [ ! -f ./$XPOSED ]; then
+    return
+  fi
+  cp_perm ./$XPOSED $XPOSED $2 $3 $4 $5
+  if [ ! -f $BACKUP ]; then
+    mv $TARGET $BACKUP || exit 1
+    ln -s $XPOSED $TARGET || exit 1
+    chcon -h 'u:object_r:system_file:s0' $TARGET 2>/dev/null
+  fi
+}
+
+install_overwrite() {
+  TARGET=$1
+  if [ ! -f ./$TARGET ]; then
+    return
+  fi
+  BACKUP="${1}.orig"
+  NO_ORIG="${1}.no_orig"
+  if [ ! -f $TARGET ]; then
+    touch $NO_ORIG || exit 1
+    set_perm $NO_ORIG 0 0 600
+  elif [ -f $BACKUP ]; then
+    rm -f $TARGET
+    gzip $BACKUP || exit 1
+    set_perm "${BACKUP}.gz" 0 0 600
+  elif [ ! -f "${BACKUP}.gz" -a ! -f $NO_ORIG ]; then
+    mv $TARGET $BACKUP || exit 1
+    gzip $BACKUP || exit 1
+    set_perm "${BACKUP}.gz" 0 0 600
+  fi
+  cp_perm ./$TARGET $TARGET $2 $3 $4 $5
+}
+
+echo "******************************"
+echo "Xposed framework installer zip"
+echo "******************************"
 
 
+echo "- Placing files"
+install_nobackup /system/xposed.prop                      0    0 0644
+install_nobackup /system/framework/XposedBridge.jar       0    0 0644
+
+install_and_link /system/bin/app_process32                0 2000 0755 u:object_r:zygote_exec:s0
+install_overwrite /system/bin/dex2oat                     0 2000 0755 u:object_r:dex2oat_exec:s0
+install_overwrite /system/bin/oatdump                     0 2000 0755
+install_overwrite /system/bin/patchoat                    0 2000 0755 u:object_r:dex2oat_exec:s0
+install_overwrite /system/lib/libart.so                   0    0 0644
+install_overwrite /system/lib/libart-compiler.so          0    0 0644
+install_overwrite /system/lib/libart-disassembler.so      0    0 0644
+install_overwrite /system/lib/libsigchain.so              0    0 0644
+install_overwrite /system/lib/libxposed_art.so            0    0 0644
+if [ $IS64BIT ]; then
+  install_and_link /system/bin/app_process64              0 2000 0755 u:object_r:zygote_exec:s0
+  install_overwrite /system/lib64/libart.so               0    0 0644
+  install_overwrite /system/lib64/libart-compiler.so      0    0 0644
+  install_overwrite /system/lib64/libart-disassembler.so  0    0 0644
+  install_overwrite /system/lib64/libsigchain.so          0    0 0644
+  install_overwrite /system/lib64/libxposed_art.so        0    0 0644
+fi
+
+if [ "$API" -ge "22" ]; then
+  find /system /vendor -type f -name '*.odex.gz' 2>/dev/null | while read f; do mv "$f" "$f.xposed"; done
+fi
+
+echo "- Done"
+exit 0
+```
+
+ - 安装
+
+```
+cd /
+mkdir system
+cd /tmp/xposedtest/android-arm32/
+sudo mount system.img /system
+cd /xposed/xposed-v79-sdk22-arm/
+./flash_script.sh
+```
+
+- 启动带Xposed安卓系统
+
+```
+cd /tmp/xposedtest/android-arm32/
+emulator -avd arm32 -system system.img -data userdata.img -ramdisk ramdisk.img
+```
+
+启动的过程中，会发现卡死在显示android字样的启动界面上。  
+这时在新启动一个shell，执行：  
+```
+adb devices
+```
+
+若发现emulator是off状态，那等一会再执行此命令，直到emulator是正常的启动状态。  
+这时若执行：  
+```
+adb logcat
+```
+会发现xposed被selinux拦截了。  
+下面的命令可以暂时关闭selinux（本次系统关闭，重启系统后会自动恢复），目前还没找永久关闭的方法。  
+```
+setenforce 0
+```
+
+执行完这个命令后，系统会继续启动，耐心等待，直到系统启动完成。  
+
+- 安装Xposed模块
+
+```
+adb install [Flat Style Colored Bars].apk
+```
+
+- 启用Xposed模块
+
+在模拟器中点击XposedInstaller，选择模块，勾选[Flat Style Colored Bars]，启用他。然后重新启动模拟器（注意启动过程中还是需要关闭selinux）。  
+
+- 验证Xposed的有效性
+
+重启后，再次在模拟器中点击XposedInstaller，选择模块，点击[Flat Style Colored Bars]，会进入其配置界面，修改一些配置，观察界面上其相应的变化。  
+
+比如，修改battery，假设原来通知栏上的电池图标是竖着的电池状。这里可以把其修改为横着的电池状，修改后，几秒后，电池就会变为横着的。  
 
 
 
