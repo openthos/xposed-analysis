@@ -93,12 +93,12 @@ make efi_img -j16
 
 - 安装必要的工具包
 
-```
-$perl -MCPAN -e 'install Perl::OSType'
+```sh
+$cpan install Perl::OSType
 $cpan install Config::IniFiles
 $cpan install File::ReadBackwards
 $cpan install File::Tail
-$perl -MCPAN -e 'install Module::Install'
+$cpan install Module::Install
 ```
 
 - XposedBridge.jar
