@@ -12,7 +12,6 @@
 - 陈威
 
 ### bug fix/feature分工
-- [HCI问题列表](https://github.com/openthos/community-analysis/blob/master/painful_points_of_OTO_before_20161024.md)
 
 TBD：bug/feature id，完成时间点
 
